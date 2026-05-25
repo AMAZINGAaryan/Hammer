@@ -43,9 +43,12 @@ Source: "..\target\release\hammer.exe"; DestDir: "{app}"; Flags: ignoreversion
 ; App icon for shortcuts/uninstaller
 Source: "deps\hammer.ico"; DestDir: "{app}"; Flags: ignoreversion
 
-; VC++ 2022 Redistributable - bundled so no internet needed
-; (downloaded into installer\deps\ by build_installer.ps1 before compiling)
-Source: "deps\vc_redist.x64.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall
+; VC++ 2022 Redistributable - bundled so no internet needed.
+; dontcopy = packed into the installer but NOT auto-extracted; we pull it out
+; on demand with ExtractTemporaryFile() in [Code]. This is required because
+; PrepareToInstall runs BEFORE the normal [Files] copy step, so a plain
+; DestDir:{tmp} entry would not exist yet at the moment we need it.
+Source: "deps\vc_redist.x64.exe"; Flags: dontcopy noencryption
 
 [Icons]
 Name: "{group}\{#AppName}";         Filename: "{app}\{#AppExeName}"; IconFilename: "{app}\hammer.ico"
@@ -91,6 +94,55 @@ begin
 end;
 
 // ----------------------------------------------------------------
+//  Make the bundled redist available at {tmp}\vc_redist.x64.exe.
+//  Primary: extract the copy packed inside this installer (dontcopy).
+//  Fallback: if extraction somehow fails, download it from Microsoft.
+//  Returns the full path, or '' if it could not be obtained.
+// ----------------------------------------------------------------
+function ObtainVCRedist: String;
+var
+  RedistPath: String;
+  ResultCode: Integer;
+begin
+  RedistPath := ExpandConstant('{tmp}\vc_redist.x64.exe');
+
+  // 1) Try to extract the bundled copy on demand.
+  if not FileExists(RedistPath) then
+  begin
+    try
+      ExtractTemporaryFile('vc_redist.x64.exe');
+    except
+      Log('ExtractTemporaryFile(vc_redist.x64.exe) failed: ' + GetExceptionMessage);
+    end;
+  end;
+
+  // 2) Fallback: download straight from Microsoft (curl ships with Win10/11).
+  if not FileExists(RedistPath) then
+  begin
+    Log('Bundled redist unavailable - downloading from Microsoft...');
+    Exec(ExpandConstant('{cmd}'),
+      '/c curl.exe -L --fail --silent --show-error -o "' + RedistPath +
+      '" https://aka.ms/vs/17/release/vc_redist.x64.exe',
+      '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+    if (ResultCode <> 0) or (not FileExists(RedistPath)) then
+    begin
+      // Last resort: PowerShell download.
+      Exec(ExpandConstant('{cmd}'),
+        '/c powershell -NoProfile -ExecutionPolicy Bypass -Command "' +
+        '[Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12;' +
+        'Invoke-WebRequest -Uri https://aka.ms/vs/17/release/vc_redist.x64.exe -OutFile ''' +
+        RedistPath + ''' -UseBasicParsing"',
+        '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+    end;
+  end;
+
+  if FileExists(RedistPath) then
+    Result := RedistPath
+  else
+    Result := '';
+end;
+
+// ----------------------------------------------------------------
 //  Before the install begins: silently run VC++ Redist if needed
 // ----------------------------------------------------------------
 function PrepareToInstall(var NeedsRestart: Boolean): String;
@@ -100,40 +152,43 @@ var
 begin
   Result := '';
 
-  if not VCRedistInstalled then
+  if VCRedistInstalled then
   begin
-    Log('VC++ 2022 x64 Redistributable not found - installing silently...');
-    RedistPath := ExpandConstant('{tmp}\vc_redist.x64.exe');
+    Log('VC++ 2022 x64 Redistributable already installed - skipping.');
+    Exit;
+  end;
 
-    // The file was already extracted to {tmp} by the [Files] section above
-    if FileExists(RedistPath) then
-    begin
-      if not Exec(RedistPath, '/install /quiet /norestart', '', SW_HIDE,
-                  ewWaitUntilTerminated, ResultCode) then
-      begin
-        Result := 'Failed to install the Visual C++ 2022 Redistributable. ' +
-                  'Please install it manually from https://aka.ms/vs/17/release/vc_redist.x64.exe ' +
-                  'and then re-run this installer.';
-      end
-      else if (ResultCode <> 0) and (ResultCode <> 3010) then
-      begin
-        // 3010 = success, reboot required
-        Result := 'Visual C++ 2022 Redistributable installer returned code ' +
-                  IntToStr(ResultCode) + '. If Hammer does not launch, ' +
-                  'please install VC++ 2022 x64 manually.';
-      end
-      else
-      begin
-        if ResultCode = 3010 then
-          NeedsRestart := True;
-        Log('VC++ 2022 x64 Redistributable installed successfully.');
-      end;
-    end
-    else
-    begin
-      Result := 'Bundled VC++ Redistributable not found at: ' + RedistPath;
-    end;
+  Log('VC++ 2022 x64 Redistributable not found - installing silently...');
+  RedistPath := ObtainVCRedist;
+
+  if RedistPath = '' then
+  begin
+    Result := 'Could not obtain the Visual C++ 2022 Redistributable (the bundled ' +
+              'copy was unavailable and no internet connection could be reached). ' +
+              'Please install it manually from ' +
+              'https://aka.ms/vs/17/release/vc_redist.x64.exe and re-run this installer.';
+    Exit;
+  end;
+
+  if not Exec(RedistPath, '/install /quiet /norestart', '', SW_HIDE,
+              ewWaitUntilTerminated, ResultCode) then
+  begin
+    Result := 'Failed to launch the Visual C++ 2022 Redistributable installer. ' +
+              'Please install it manually from ' +
+              'https://aka.ms/vs/17/release/vc_redist.x64.exe and re-run this installer.';
+  end
+  else if (ResultCode = 3010) then
+  begin
+    NeedsRestart := True;
+    Log('VC++ 2022 x64 Redistributable installed - restart required.');
+  end
+  else if (ResultCode <> 0) and (ResultCode <> 1638) and (ResultCode <> 5100) then
+  begin
+    // 1638 / 5100 = a same-or-newer version is already present; treat as OK.
+    Result := 'Visual C++ 2022 Redistributable installer returned code ' +
+              IntToStr(ResultCode) + '. If Hammer does not launch, please ' +
+              'install VC++ 2022 x64 manually.';
   end
   else
-    Log('VC++ 2022 x64 Redistributable already installed - skipping.');
+    Log('VC++ 2022 x64 Redistributable installed successfully.');
 end;
