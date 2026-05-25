@@ -1,0 +1,6 @@
+/target
+/installer-output
+# Generated/downloaded build deps - keep only the prebuilt icon
+/installer/deps/*
+!/installer/deps/hammer.ico
+*.pdb
