@@ -9,7 +9,9 @@
 
 const OWNER = "AMAZINGAaryan";
 const REPO = "Hammer";
-let downloadUrl = `https://github.com/${OWNER}/${REPO}/releases/latest/download/hammer.exe`;
+const base = `https://github.com/${OWNER}/${REPO}/releases/latest/download`;
+let hammerUrl = `${base}/hammer.exe`;
+let blasterUrl = `${base}/blaster.exe`;
 
 const DPR = Math.min(window.devicePixelRatio || 1, 2);
 function fit(canvas, w, h) {
@@ -259,17 +261,22 @@ function showToast(msg) {
   clearTimeout(showToast._t);
   showToast._t = setTimeout(() => toastEl.classList.remove("show"), 2200);
 }
-function startDownload() {
-  const now = performance.now();
-  if (now - lastDl < 2500) return;
-  lastDl = now;
+function triggerDownload(url) {
   const a = document.createElement("a");
-  a.href = downloadUrl;
+  a.href = url;
   a.setAttribute("download", "");
   document.body.appendChild(a);
   a.click();
   a.remove();
-  showToast("Download started! 🎉");
+}
+function startDownload() {
+  const now = performance.now();
+  if (now - lastDl < 3000) return;
+  lastDl = now;
+  // Both binaries at once: Hammer (installer) + Blaster (portable).
+  triggerDownload(hammerUrl);
+  setTimeout(() => triggerDownload(blasterUrl), 800);
+  showToast("Downloading Hammer + Blaster 🎉");
 }
 
 function blastEl(el) {
@@ -387,9 +394,12 @@ async function hydrate() {
       : "released";
     if (Array.isArray(data.assets) && data.assets.length) {
       const exes = data.assets.filter((a) => a.name.toLowerCase().endsWith(".exe"));
-      const asset = exes.find((a) => /setup|install|hammer/i.test(a.name)) || exes[0] || data.assets[0];
-      if (asset && asset.browser_download_url) downloadUrl = asset.browser_download_url;
-      if (asset && typeof asset.size === "number" && s) s.textContent = `${(asset.size / 1048576).toFixed(1)} MB`;
+      const hammer = exes.find((a) => /hammer/i.test(a.name));
+      const blaster = exes.find((a) => /blaster/i.test(a.name));
+      if (hammer && hammer.browser_download_url) hammerUrl = hammer.browser_download_url;
+      if (blaster && blaster.browser_download_url) blasterUrl = blaster.browser_download_url;
+      const totalBytes = exes.reduce((sum, a) => sum + (typeof a.size === "number" ? a.size : 0), 0);
+      if (totalBytes && s) s.textContent = `${(totalBytes / 1048576).toFixed(1)} MB`;
     }
   } catch (e) {
     const v = document.getElementById("releaseVersion");
