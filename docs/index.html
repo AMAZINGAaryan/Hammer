@@ -2,112 +2,113 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Hammer - One Click Load Testing</title>
-  <meta name="description" content="Hammer: a fast, focused Windows load testing app. Download the installer instantly.">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Project Hammer - by Aaryan</title>
+  <meta name="description" content="Project Hammer by Aaryan - a fast Windows load-testing app. Shoot a balloon to download.">
   <link rel="icon" type="image/png" href="assets/logo.png">
   <link rel="apple-touch-icon" href="assets/logo.png">
   <meta name="theme-color" content="#ff2db8">
-  <meta property="og:title" content="Hammer - One Click Load Testing">
-  <meta property="og:description" content="Download the Hammer Windows installer. One click installs everything and you are blasting traffic.">
+  <meta property="og:title" content="Project Hammer - by Aaryan">
+  <meta property="og:description" content="Click the logo. It explodes. Then shoot a balloon to download.">
   <meta property="og:image" content="assets/logo.png">
   <link rel="stylesheet" href="styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Fraunces:opsz,wght@9..144,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Bagel+Fat+One&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="backdrop">
-    <div class="orb orb-a"></div>
-    <div class="orb orb-b"></div>
-    <div class="orb orb-c"></div>
-    <div class="grid"></div>
-  </div>
+  <!-- animated background -->
+  <canvas id="bg"></canvas>
+  <!-- full-screen fx layer (logo explosion) -->
+  <canvas id="fx"></canvas>
 
-  <main class="page">
-    <header class="hero">
-      <div class="badge">Windows Installer</div>
-      <h1>
-        <span class="title-accent">Hammer</span>
-        <span>Load Testing That Hits Hard</span>
-      </h1>
-      <p class="lead">
-        A fast, focused app for stress and blast testing. One click and you are shipping real traffic.
-      </p>
+  <!-- ============ INTRO ============ -->
+  <section id="intro" class="intro">
+    <div class="intro-inner">
+      <p class="eyebrow">PROJECT</p>
+      <button id="logoBtn" class="logo-orb" aria-label="Detonate the logo">
+        <span class="ring ring-1"></span>
+        <span class="ring ring-2"></span>
+        <span class="ring ring-3"></span>
+        <img src="assets/logo.png" alt="Project Hammer logo">
+        <span class="orb-glow"></span>
+      </button>
+      <h1 class="hero-title">HAMMER</h1>
+      <p class="byline">by Aaryan</p>
+      <p class="hint"><span class="pulse-dot"></span> Click the face — it explodes</p>
+    </div>
+  </section>
 
-      <div class="badge-row">
-        <a class="badge-link" href="https://github.com/AMAZINGAaryan/Hammer/releases" target="_blank" rel="noreferrer">
-          <img src="https://img.shields.io/github/v/release/AMAZINGAaryan/Hammer?label=release&style=for-the-badge" alt="Latest release">
-        </a>
-        <a class="badge-link" href="https://github.com/AMAZINGAaryan/Hammer/releases" target="_blank" rel="noreferrer">
-          <img src="https://img.shields.io/github/downloads/AMAZINGAaryan/Hammer/latest/total?style=for-the-badge" alt="Latest downloads">
-        </a>
+  <!-- ============ MAIN STAGE ============ -->
+  <main id="stage" class="stage" aria-hidden="true">
+    <header class="topbar">
+      <div class="brand">
+        <img src="assets/logo.png" alt="">
+        <span>Project <b>Hammer</b></span>
       </div>
+      <nav class="topnav">
+        <a href="#download">Download</a>
+        <a href="https://github.com/AMAZINGAaryan/Hammer" target="_blank" rel="noreferrer">GitHub</a>
+      </nav>
+    </header>
 
-      <a
-        id="downloadBtn"
-        class="download-btn"
-        href="https://github.com/AMAZINGAaryan/Hammer/releases/latest/download/hammer.exe"
-        data-download="https://github.com/AMAZINGAaryan/Hammer/releases/latest/download/hammer.exe"
-      >
-        <span class="btn-glow"></span>
-        <img class="logo" src="assets/logo.png" alt="Hammer logo">
-        <span class="btn-text">
-          <span class="btn-title">Click the face to blast & download</span>
-          <span class="btn-sub">Windows installer (hammer.exe) - one click, installs everything</span>
-        </span>
-      </a>
-
+    <section class="pitch">
+      <h2>Load testing that <span class="grad">hits hard.</span></h2>
+      <p class="lead">
+        A fast, focused Windows app. Point it at a domain you control, it discovers the
+        pages, and blasts them at up to <b>100,000</b> workers. One <code>.exe</code>,
+        no runtime to install.
+      </p>
       <div class="meta">
         <div class="meta-item">
-          <span class="meta-label">Latest Release</span>
-          <span class="meta-value" id="releaseVersion">Loading...</span>
-          <span class="meta-sub" id="releaseDate">Checking GitHub...</span>
+          <span class="meta-label">Latest</span>
+          <span class="meta-value" id="releaseVersion">…</span>
+          <span class="meta-sub" id="releaseDate">checking GitHub</span>
         </div>
         <div class="meta-item">
           <span class="meta-label">OS</span>
           <span class="meta-value">Windows 10+</span>
+          <span class="meta-sub">64-bit</span>
         </div>
         <div class="meta-item">
-          <span class="meta-label">Size</span>
-          <span class="meta-value" id="releaseSize">Detecting...</span>
+          <span class="meta-label">Installer</span>
+          <span class="meta-value" id="releaseSize">…</span>
+          <span class="meta-sub">one click</span>
         </div>
       </div>
-    </header>
-
-    <section class="features">
-      <article>
-        <h2>Instant load tests</h2>
-        <p>Blast endpoints with real concurrency. See results immediately.</p>
-      </article>
-      <article>
-        <h2>Built for speed</h2>
-        <p>Rust-powered engine keeps throughput high and latency visible.</p>
-      </article>
-      <article>
-        <h2>Simple UI</h2>
-        <p>Keep it clean. Launch, configure, and go.</p>
-      </article>
     </section>
 
-    <section class="steps">
-      <div>
-        <h3>Three steps</h3>
-        <ol>
-          <li>Download the installer.</li>
-          <li>Run setup and launch Hammer.</li>
-          <li>Start blasting.</li>
-        </ol>
+    <section class="features">
+      <article><div class="ic">⚡</div><h3>Instant blasts</h3><p>Real concurrency, no think-time. Live throughput as it climbs.</p></article>
+      <article><div class="ic">🦀</div><h3>Pure Rust engine</h3><p>tokio + reqwest. High throughput, low overhead, single binary.</p></article>
+      <article><div class="ic">🖥️</div><h3>Runs anywhere</h3><p>wgpu + WARP fallback — works even with no GPU driver.</p></article>
+    </section>
+
+    <!-- ============ SHOOTING GALLERY ============ -->
+    <section id="download" class="gallery-wrap">
+      <h3 class="g-title">Shoot a balloon to download <span>🎈</span></h3>
+      <p class="g-sub">Aim with your mouse. Click to fire the cannon. Pop a balloon and the installer downloads.</p>
+
+      <div id="arena" class="arena">
+        <canvas id="arenaCanvas"></canvas>
+        <div id="gun" class="gun">
+          <div class="gun-barrel"></div>
+          <div class="gun-base"></div>
+        </div>
+        <div id="score" class="score">POPPED: 0</div>
+        <div id="toast" class="toast"></div>
+        <div class="arena-hint">move mouse to aim · click to shoot</div>
       </div>
-      <div class="cta-card">
-        <h3>Blast the logo</h3>
-        <p>Click the logo button. It explodes and the download starts instantly.</p>
-      </div>
+
+      <a id="directDl" class="direct"
+         href="https://github.com/AMAZINGAaryan/Hammer/releases/latest/download/hammer.exe">
+        or download directly — hammer.exe
+      </a>
     </section>
 
     <footer class="footer">
-      <span>Hammer by Tongass</span>
-      <a href="https://github.com/AMAZINGAaryan/Hammer" target="_blank" rel="noreferrer">GitHub</a>
+      <span>Project Hammer · by Aaryan</span>
+      <a href="https://github.com/AMAZINGAaryan/Hammer" target="_blank" rel="noreferrer">github.com/AMAZINGAaryan/Hammer</a>
     </footer>
   </main>
 

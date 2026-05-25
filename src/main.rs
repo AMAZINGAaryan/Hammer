@@ -286,160 +286,267 @@ fn to_path(url: &str) -> Option<String> {
     }
 }
 
+// Dark, colorful theme + larger fonts. Applied once at startup.
+fn setup_theme(ctx: &egui::Context) {
+    use egui::{Color32, FontFamily, FontId, TextStyle};
+    // Force our dark theme; do not follow the OS light/dark setting.
+    ctx.set_theme(egui::ThemePreference::Dark);
+    let mut style = (*ctx.style()).clone();
+    style.spacing.item_spacing = egui::vec2(10.0, 10.0);
+    style.spacing.button_padding = egui::vec2(14.0, 8.0);
+    style.text_styles = [
+        (TextStyle::Heading, FontId::new(30.0, FontFamily::Proportional)),
+        (TextStyle::Body, FontId::new(15.5, FontFamily::Proportional)),
+        (TextStyle::Button, FontId::new(15.5, FontFamily::Proportional)),
+        (TextStyle::Monospace, FontId::new(14.5, FontFamily::Monospace)),
+        (TextStyle::Small, FontId::new(12.5, FontFamily::Proportional)),
+    ]
+    .into();
+
+    let mut v = egui::Visuals::dark();
+    v.panel_fill = Color32::from_rgb(13, 12, 22);
+    v.override_text_color = Some(Color32::from_rgb(236, 234, 247));
+    v.widgets.noninteractive.bg_stroke.color = Color32::from_rgb(46, 41, 68);
+    v.widgets.inactive.bg_fill = Color32::from_rgb(38, 33, 56);
+    v.widgets.inactive.weak_bg_fill = Color32::from_rgb(38, 33, 56);
+    v.widgets.hovered.bg_fill = Color32::from_rgb(54, 47, 82);
+    v.widgets.active.bg_fill = Color32::from_rgb(64, 56, 96);
+    v.selection.bg_fill = Color32::from_rgb(124, 77, 255);
+    v.extreme_bg_color = Color32::from_rgb(20, 18, 32); // text-edit background
+    style.visuals = v;
+    ctx.set_style(style);
+}
+
+fn card_frame() -> egui::Frame {
+    egui::Frame::none()
+        .fill(egui::Color32::from_rgb(20, 17, 34))
+        .stroke(egui::Stroke::new(1.0, egui::Color32::from_rgb(50, 43, 74)))
+        .rounding(16.0)
+        .inner_margin(egui::Margin::same(17.0))
+}
+
+fn metric_card(ui: &mut egui::Ui, label: &str, value: String, accent: egui::Color32, width: f32) {
+    egui::Frame::none()
+        .fill(egui::Color32::from_rgb(24, 22, 40))
+        .stroke(egui::Stroke::new(1.0, egui::Color32::from_rgb(48, 43, 72)))
+        .rounding(14.0)
+        .inner_margin(egui::Margin::same(14.0))
+        .show(ui, |ui| {
+            ui.set_width((width - 28.0).max(60.0));
+            ui.set_min_height(64.0);
+            ui.vertical(|ui| {
+                ui.label(
+                    egui::RichText::new(label)
+                        .size(11.0)
+                        .strong()
+                        .color(egui::Color32::from_rgb(162, 157, 190)),
+                );
+                ui.add_space(6.0);
+                ui.label(
+                    egui::RichText::new(value)
+                        .size(23.0)
+                        .strong()
+                        .color(accent),
+                );
+            });
+        });
+}
+
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         let running = self.shared.running.load(Ordering::Relaxed);
+
+        // premium palette - all bright enough to read on the near-black bg
+        let pink = egui::Color32::from_rgb(244, 114, 208);
+        let cyan = egui::Color32::from_rgb(56, 213, 247);
+        let yellow = egui::Color32::from_rgb(251, 191, 36);
+        let purple = egui::Color32::from_rgb(167, 139, 250);
+        let green = egui::Color32::from_rgb(52, 211, 153);
+        let red = egui::Color32::from_rgb(248, 113, 113);
+        let muted = egui::Color32::from_rgb(165, 160, 192);
+        let ink = egui::Color32::from_rgb(11, 10, 18); // dark text on bright fills
+
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("HAMMER - local max-load tester");
-            ui.label("Authorized load testing. Enter a domain you control.");
-            ui.add_space(10.0);
+            egui::ScrollArea::vertical().auto_shrink([false; 2]).show(ui, |ui| {
+                let full = ui.available_width();
+                let colw = full.min(820.0);
+                let pad = ((full - colw) / 2.0).max(0.0);
+                let title_sz = if colw < 360.0 { 25.0 } else if colw < 500.0 { 33.0 } else { 42.0 };
+                ui.horizontal(|ui| {
+                    ui.add_space(pad);
+                    ui.vertical(|ui| {
+                        ui.set_width(colw);
+                        let w = colw;
+                        let inner = (w - 34.0).max(140.0);
 
-            ui.horizontal(|ui| {
-                ui.label("Domain:");
-                ui.add_enabled(
-                    !running,
-                    egui::TextEdit::singleline(&mut self.domain)
-                        .hint_text("example.com")
-                        .desired_width(280.0),
-                );
-            });
+                        ui.add_space(10.0);
+                        ui.vertical_centered(|ui| {
+                            ui.horizontal(|ui| {
+                                ui.label(egui::RichText::new("PROJECT ").size(title_sz).strong().color(pink));
+                                ui.label(egui::RichText::new("HAMMER").size(title_sz).strong().color(cyan));
+                            });
+                            ui.label(egui::RichText::new("by Aaryan").size(17.0).strong().color(yellow));
+                            ui.label(
+                                egui::RichText::new("Authorized load testing - enter a domain you control.")
+                                    .size(13.0)
+                                    .color(muted),
+                            );
+                        });
+                        ui.add_space(16.0);
 
-            ui.horizontal(|ui| {
-                ui.label("Concurrency:");
-                ui.add_enabled(
-                    !running,
-                    egui::Slider::new(&mut self.concurrency, 50..=MAX_WORKERS)
-                        .logarithmic(true)
-                        .text("workers"),
-                );
-            });
+                    // ---------------- control card ----------------
+                    card_frame().show(ui, |ui| {
+                        ui.set_width(inner);
 
-            // Machine-aware presets - pick a level that fits your hardware.
-            ui.horizontal(|ui| {
-                ui.label("Presets:");
-                let presets: [(&str, u32); 4] = [
-                    ("Light 1K", 1_000),
-                    ("Medium 10K", 10_000),
-                    ("Heavy 50K", 50_000),
-                    ("MAX 100K", MAX_WORKERS),
-                ];
-                for (label, value) in presets {
-                    if ui
-                        .add_enabled(!running, egui::Button::new(label))
-                        .clicked()
-                    {
-                        self.concurrency = value;
+                        ui.label(egui::RichText::new("TARGET DOMAIN").size(12.0).strong().color(cyan));
+                        ui.add_space(4.0);
+                        ui.add_enabled(
+                            !running,
+                            egui::TextEdit::singleline(&mut self.domain)
+                                .hint_text("example.com")
+                                .desired_width(f32::INFINITY),
+                        );
+                        ui.add_space(14.0);
+
+                        ui.label(
+                            egui::RichText::new(format!("CONCURRENCY - {} workers", self.concurrency))
+                                .size(12.0)
+                                .strong()
+                                .color(cyan),
+                        );
+                        ui.add_space(4.0);
+                        ui.style_mut().spacing.slider_width = (inner - 78.0).max(60.0);
+                        ui.add_enabled(
+                            !running,
+                            egui::Slider::new(&mut self.concurrency, 50..=MAX_WORKERS)
+                                .logarithmic(true)
+                                .show_value(true),
+                        );
+                        ui.add_space(10.0);
+
+                        ui.horizontal_wrapped(|ui| {
+                            let presets: [(&str, u32, egui::Color32); 4] = [
+                                ("Light 1K", 1_000, green),
+                                ("Medium 10K", 10_000, cyan),
+                                ("Heavy 50K", 50_000, yellow),
+                                ("MAX 100K", MAX_WORKERS, pink),
+                            ];
+                            for (label, value, col) in presets {
+                                let selected = self.concurrency == value;
+                                let text = egui::RichText::new(label).strong().color(
+                                    if selected { ink } else { col },
+                                );
+                                let mut btn = egui::Button::new(text).rounding(9.0);
+                                if selected {
+                                    btn = btn.fill(col);
+                                }
+                                if ui.add_enabled(!running, btn).clicked() {
+                                    self.concurrency = value;
+                                }
+                            }
+                        });
+
+                        ui.add_space(8.0);
+                        ui.label(
+                            egui::RichText::new(format!(
+                                "This machine: {} logical CPUs - recommended start {}",
+                                self.cpus,
+                                ((self.cpus as u32) * 1000).clamp(500, 20_000)
+                            ))
+                            .size(12.0)
+                            .color(muted),
+                        );
+                        if self.concurrency > 28_000 {
+                            ui.label(
+                                egui::RichText::new(
+                                    "High count: beyond ~28K, Windows reuses pooled keep-alive \
+                                     connections instead of opening new sockets. Use a strong machine.",
+                                )
+                                .size(12.0)
+                                .color(yellow),
+                            );
+                        }
+
+                        ui.add_space(10.0);
+                        ui.add_enabled(
+                            !running,
+                            egui::Checkbox::new(
+                                &mut self.insecure,
+                                "Accept self-signed / invalid TLS",
+                            ),
+                        );
+
+                        ui.add_space(16.0);
+                        let (txt, fill) = if running { ("STOP", red) } else { ("START", green) };
+                        let btn = egui::Button::new(
+                            egui::RichText::new(txt).size(20.0).strong().color(ink),
+                        )
+                        .fill(fill)
+                        .rounding(12.0)
+                        .min_size(egui::vec2(ui.available_width(), 50.0));
+                        if ui.add(btn).clicked() {
+                            if running {
+                                self.shared.running.store(false, Ordering::SeqCst);
+                            } else if !self.domain.trim().is_empty() {
+                                self.shared.counters.total.store(0, Ordering::SeqCst);
+                                self.shared.counters.ok.store(0, Ordering::SeqCst);
+                                self.shared.counters.fail.store(0, Ordering::SeqCst);
+                                self.shared.counters.bytes.store(0, Ordering::SeqCst);
+                                *self.shared.started.lock().unwrap() = Some(Instant::now());
+                                self.shared.running.store(true, Ordering::SeqCst);
+                                spawn_engine(
+                                    self.domain.clone(),
+                                    self.concurrency,
+                                    self.insecure,
+                                    self.shared.clone(),
+                                );
+                            }
+                        }
+                    });
+
+                    ui.add_space(20.0);
+
+                    // ---------------- live stats ----------------
+                    let total = self.shared.counters.total.load(Ordering::Relaxed);
+                    let ok = self.shared.counters.ok.load(Ordering::Relaxed);
+                    let fail = self.shared.counters.fail.load(Ordering::Relaxed);
+                    let bytes = self.shared.counters.bytes.load(Ordering::Relaxed);
+                    let elapsed = self
+                        .shared
+                        .started
+                        .lock()
+                        .unwrap()
+                        .map(|s| s.elapsed().as_secs_f64())
+                        .unwrap_or(0.0);
+                    let rps = if elapsed > 0.0 { total as f64 / elapsed } else { 0.0 };
+                    let okpct = if total > 0 { ok as f64 / total as f64 * 100.0 } else { 0.0 };
+                    let status = self.shared.status.lock().unwrap().clone();
+                    let pages = *self.shared.pages.lock().unwrap();
+
+                    let metrics: [(&str, String, egui::Color32); 8] = [
+                        ("STATUS", status, if running { green } else { muted }),
+                        ("PAGES", format!("{}", pages), purple),
+                        ("TOTAL REQUESTS", format!("{}", total), egui::Color32::from_rgb(236, 234, 247)),
+                        ("THROUGHPUT", format!("{:.0} req/s", rps), cyan),
+                        ("SUCCESS", format!("{:.1}%", okpct), green),
+                        ("OK / FAIL", format!("{} / {}", ok, fail), yellow),
+                        ("DATA", format!("{:.1} MB", bytes as f64 / 1_048_576.0), purple),
+                        ("ELAPSED", format!("{:.0} s", elapsed), cyan),
+                    ];
+                    // responsive grid: column count adapts to the column width
+                    let gap = 10.0;
+                    let cols = (((colw + gap) / (150.0 + gap)).floor() as usize).clamp(1, 4);
+                    let cardw = ((colw - gap * (cols as f32 - 1.0)) / cols as f32).floor();
+                    for chunk in metrics.chunks(cols) {
+                        ui.horizontal(|ui| {
+                            for (label, value, accent) in chunk {
+                                metric_card(ui, *label, value.clone(), *accent, cardw);
+                            }
+                        });
                     }
-                }
-            });
-
-            ui.label(
-                egui::RichText::new(format!(
-                    "This machine: {} logical CPUs detected. Recommended start: {}.",
-                    self.cpus,
-                    ((self.cpus as u32) * 1000).clamp(500, 20_000)
-                ))
-                .small()
-                .weak(),
-            );
-
-            // Warn once the worker count exceeds the typical Windows ephemeral
-            // port range - past this point connections are reused, not added.
-            if self.concurrency > 28_000 {
-                ui.label(
-                    egui::RichText::new(
-                        "High worker count: beyond ~28K, Windows reuses pooled \
-                         keep-alive connections rather than opening new sockets. \
-                         Use a strong machine and watch CPU/RAM.",
-                    )
-                    .small()
-                    .color(egui::Color32::from_rgb(255, 170, 60)),
-                );
-            }
-
-            ui.add_space(6.0);
-            ui.add_enabled(
-                !running,
-                egui::Checkbox::new(&mut self.insecure, "Accept invalid/self-signed TLS (staging sites)"),
-            );
-
-            ui.add_space(10.0);
-            ui.horizontal(|ui| {
-                if !running {
-                    if ui
-                        .add_sized([120.0, 36.0], egui::Button::new("START"))
-                        .clicked()
-                        && !self.domain.trim().is_empty()
-                    {
-                        // reset counters
-                        self.shared.counters.total.store(0, Ordering::SeqCst);
-                        self.shared.counters.ok.store(0, Ordering::SeqCst);
-                        self.shared.counters.fail.store(0, Ordering::SeqCst);
-                        self.shared.counters.bytes.store(0, Ordering::SeqCst);
-                        *self.shared.started.lock().unwrap() = Some(Instant::now());
-                        self.shared.running.store(true, Ordering::SeqCst);
-                        spawn_engine(self.domain.clone(), self.concurrency, self.insecure, self.shared.clone());
-                    }
-                } else {
-                    if ui
-                        .add_sized([120.0, 36.0], egui::Button::new("STOP"))
-                        .clicked()
-                    {
-                        self.shared.running.store(false, Ordering::SeqCst);
-                    }
-                }
-            });
-
-            ui.add_space(14.0);
-            ui.separator();
-            ui.add_space(8.0);
-
-            let total = self.shared.counters.total.load(Ordering::Relaxed);
-            let ok = self.shared.counters.ok.load(Ordering::Relaxed);
-            let fail = self.shared.counters.fail.load(Ordering::Relaxed);
-            let bytes = self.shared.counters.bytes.load(Ordering::Relaxed);
-            let elapsed = self
-                .shared
-                .started
-                .lock()
-                .unwrap()
-                .map(|s| s.elapsed().as_secs_f64())
-                .unwrap_or(0.0);
-            let rps = if elapsed > 0.0 {
-                total as f64 / elapsed
-            } else {
-                0.0
-            };
-            let okpct = if total > 0 {
-                ok as f64 / total as f64 * 100.0
-            } else {
-                0.0
-            };
-            let status = self.shared.status.lock().unwrap().clone();
-            let pages = *self.shared.pages.lock().unwrap();
-
-            egui::Grid::new("stats").num_columns(2).spacing([24.0, 8.0]).show(ui, |ui| {
-                ui.label("Status:");
-                ui.label(&status);
-                ui.end_row();
-                ui.label("Pages discovered:");
-                ui.label(format!("{}", pages));
-                ui.end_row();
-                ui.label("Total requests:");
-                ui.label(format!("{}", total));
-                ui.end_row();
-                ui.label("Throughput:");
-                ui.label(format!("{:.0} req/s", rps));
-                ui.end_row();
-                ui.label("Success:");
-                ui.label(format!("{:.1}%  ({} ok / {} fail)", okpct, ok, fail));
-                ui.end_row();
-                ui.label("Data received:");
-                ui.label(format!("{:.1} MB", bytes as f64 / 1_048_576.0));
-                ui.end_row();
-                ui.label("Elapsed:");
-                ui.label(format!("{:.0} s", elapsed));
-                ui.end_row();
+                        ui.add_space(20.0);
+                    });
+                });
             });
         });
 
@@ -492,14 +599,17 @@ fn main() -> eframe::Result<()> {
         // software renderer when no GPU/OpenGL driver is present.
         renderer: eframe::Renderer::Wgpu,
         viewport: egui::ViewportBuilder::default()
-            .with_inner_size([560.0, 580.0])
-            .with_min_inner_size([460.0, 520.0])
+            .with_inner_size([680.0, 760.0])
+            .with_min_inner_size([340.0, 440.0])
             .with_icon(Arc::new(icon_data)),
         ..Default::default()
     };
     eframe::run_native(
-        "Hammer",
+        "Project Hammer - by Aaryan",
         options,
-        Box::new(|_cc| Ok(Box::<App>::default())),
+        Box::new(|cc| {
+            setup_theme(&cc.egui_ctx);
+            Ok(Box::<App>::default())
+        }),
     )
 }
