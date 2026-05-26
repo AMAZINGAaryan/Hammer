@@ -287,19 +287,27 @@ body.revealed .mute { opacity: 1; }
 }
 .footer a { color: var(--text); text-decoration: none; }
 
-/* tiny Pappu button — opens the downloads page */
+/* Pappu button — colored pill in the right corner, opens downloads page */
 .pappu {
-  flex-basis: 100%;
-  text-align: center;
-  margin-top: 14px;
-  font-size: 0.74rem;
-  letter-spacing: 1px;
-  color: var(--muted);
-  opacity: 0.6;
+  margin-left: auto;
+  padding: 7px 16px;
+  border-radius: 999px;
+  border: 1.5px solid #ff2db8;
+  background: rgba(255, 45, 184, 0.10);
+  box-shadow: 0 0 14px rgba(255, 45, 184, 0.25);
   cursor: pointer;
-  transition: opacity .2s, color .2s, transform .2s;
+  transition: transform .2s, box-shadow .2s;
 }
-.pappu:hover { opacity: 1; color: var(--text); transform: translateY(-1px); }
+.pappu span {
+  font-weight: 800;
+  font-size: 0.82rem;
+  letter-spacing: 1.5px;
+  background: linear-gradient(90deg, #ff2db8, #37d5f7);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.pappu:hover { transform: translateY(-1px); box-shadow: 0 0 22px rgba(255, 45, 184, 0.5); }
 
 /* ===================== KEYFRAMES ===================== */
 @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
