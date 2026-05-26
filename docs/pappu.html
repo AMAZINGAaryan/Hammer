@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Downloads · Pappu</title>
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+  <meta name="theme-color" content="#ff2db8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Bagel+Fat+One&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0a0613; --card:#160e26; --line:rgba(255,255,255,.10);
+      --text:#f4eefb; --muted:#a99fc4; --pink:#ff2db8; --cyan:#37d5f7; --green:#34d399; --gold:#fbbf24;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family:"Space Grotesk",-apple-system,Segoe UI,Roboto,sans-serif;
+      background:
+        radial-gradient(120% 80% at 20% 0%, #2a1140 0%, transparent 55%),
+        radial-gradient(120% 80% at 90% 10%, #0d2740 0%, transparent 55%),
+        var(--bg);
+      color:var(--text); min-height:100vh; padding:40px 20px 60px;
+      display:flex; flex-direction:column; align-items:center;
+    }
+    .head{text-align:center;margin-bottom:34px}
+    .head h1{font-family:"Bagel Fat One",cursive;font-size:clamp(34px,7vw,58px);
+      background:linear-gradient(90deg,var(--pink),var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent;}
+    .head p{color:var(--muted);margin-top:8px;font-size:.95rem}
+    .grid{
+      display:grid; gap:20px; width:100%; max-width:760px;
+      grid-template-columns:repeat(2,1fr);
+    }
+    @media (max-width:560px){ .grid{grid-template-columns:1fr} }
+    .box{
+      display:flex; flex-direction:column; gap:8px; align-items:flex-start;
+      text-decoration:none; color:var(--text);
+      background:linear-gradient(160deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      border:1px solid var(--line); border-radius:28px; padding:24px 22px;
+      position:relative; overflow:hidden; min-height:168px;
+      transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+    .box:hover{ transform:translateY(-4px); border-color:var(--accent,var(--pink));
+      box-shadow:0 18px 44px rgba(0,0,0,.45), 0 0 0 1px var(--accent,var(--pink)); }
+    .box .ic{font-size:34px;line-height:1}
+    .box .name{font-size:1.32rem;font-weight:700;letter-spacing:.5px}
+    .box .sub{color:var(--muted);font-size:.86rem;line-height:1.45}
+    .box .tag{
+      margin-top:auto; align-self:flex-start; font-size:.74rem; font-weight:700; letter-spacing:1px;
+      padding:6px 12px; border-radius:999px; color:#0a0613; background:var(--accent,var(--pink));
+    }
+    .b1{--accent:var(--pink)} .b2{--accent:var(--gold)} .b3{--accent:var(--cyan)} .b4{--accent:var(--green)}
+    .back{margin-top:34px;color:var(--muted);text-decoration:none;font-size:.9rem;opacity:.8}
+    .back:hover{opacity:1;color:var(--text)}
+    .note{color:var(--muted);font-size:.78rem;margin-top:18px;text-align:center;max-width:560px;line-height:1.5}
+  </style>
+</head>
+<body>
+  <div class="head">
+    <h1>Pappu Downloads</h1>
+    <p>Pick your build — one click downloads it.</p>
+  </div>
+
+  <div class="grid">
+    <a class="box b1" href="https://github.com/AMAZINGAaryan/Hammer/releases/latest/download/hammer.exe">
+      <div class="ic">🔨</div>
+      <div class="name">HAMMER</div>
+      <div class="sub">Windows desktop · load-tests any domain you control, auto-discovers pages, up to 100k workers.</div>
+      <span class="tag">Windows · .exe</span>
+    </a>
+
+    <a class="box b2" href="https://github.com/AMAZINGAaryan/Hammer/releases/latest/download/blaster.exe">
+      <div class="ic">🔑</div>
+      <div class="name">BLASTER</div>
+      <div class="sub">Windows desktop · authorized Keycloak staging stress test (create → login → password → verify).</div>
+      <span class="tag">Windows · .exe</span>
+    </a>
+
+    <a class="box b3" href="https://github.com/AMAZINGAaryan/Hammer/releases/latest/download/boss.exe">
+      <div class="ic">💧</div>
+      <div class="name">BOSS</div>
+      <div class="sub">Windows desktop · glassmorphic load tester, origin override, background jobs that survive reboot.</div>
+      <span class="tag">Windows · .exe</span>
+    </a>
+
+    <a class="box b4" href="https://github.com/AMAZINGAaryan/Hammer/releases/latest/download/boss.apk">
+      <div class="ic">📱</div>
+      <div class="name">BOSS</div>
+      <div class="sub">Android · same glass load tester on your phone (foreground while the app is open). Sideload it.</div>
+      <span class="tag">Android · .apk</span>
+    </a>
+  </div>
+
+  <p class="note">Desktop builds are one-click installers (Start Menu + desktop shortcuts). The Android APK is sideloaded — enable “install from unknown sources” and tap “install anyway” if prompted.</p>
+  <a class="back" href="index.html">← back</a>
+</body>
+</html>

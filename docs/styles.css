@@ -287,6 +287,20 @@ body.revealed .mute { opacity: 1; }
 }
 .footer a { color: var(--text); text-decoration: none; }
 
+/* tiny Pappu button — opens the downloads page */
+.pappu {
+  flex-basis: 100%;
+  text-align: center;
+  margin-top: 14px;
+  font-size: 0.74rem;
+  letter-spacing: 1px;
+  color: var(--muted);
+  opacity: 0.6;
+  cursor: pointer;
+  transition: opacity .2s, color .2s, transform .2s;
+}
+.pappu:hover { opacity: 1; color: var(--text); transform: translateY(-1px); }
+
 /* ===================== KEYFRAMES ===================== */
 @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
 @keyframes spin { to { transform: rotate(360deg); } }

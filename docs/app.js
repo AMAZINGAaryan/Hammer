@@ -371,6 +371,7 @@ window.addEventListener("pointermove", (e) => { pointer.x = e.clientX; pointer.y
 window.addEventListener("pointerdown", (e) => {
   if (!revealed) return;
   if (e.target.closest("#muteBtn")) return;
+  if (e.target.closest("#pappuBtn")) return;
   pointer.x = e.clientX; pointer.y = e.clientY;
   fire();
 });
